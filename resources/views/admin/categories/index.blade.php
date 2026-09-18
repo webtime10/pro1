@@ -18,7 +18,7 @@
             <div class="oc-panel-body table-responsive">
                 <form id="form-category" method="post" action="{{ route('admin.categories.destroy-selected') }}">
                     @csrf
-                    <table class="table oc-table oc-table-catalog table-hover mb-0">
+                    <table class="table oc-table oc-table-catalog mb-0">
                         <thead>
                             <tr>
                                 <th style="width:1px" class="text-center">

@@ -22,14 +22,33 @@
     <div class="card-body">
         <div class="tab-content">
             <div class="tab-pane fade show active" id="tab-general">
-                <ul class="nav nav-tabs mb-3" role="tablist">
+                <div class="d-flex flex-wrap align-items-center justify-content-between mb-2">
+                    <p class="text-muted small mb-0 mr-2">
+                        Вставьте текст на вкладке <strong>Русский</strong> → «Перевод»: EN/UK + SEO (meta title / description) через Gemini.
+                    </p>
+                    <button type="button" class="oc-btn oc-btn-primary oc-btn-wide js-article-translate" title="Перевести с русского на EN и UK">
+                        <i class="fas fa-language"></i>
+                        <span class="ml-1">Перевод</span>
+                    </button>
+                </div>
+                <div id="article-translate-status" class="article-translate-status d-none" aria-live="polite">
+                    <div class="article-translate-status__row">
+                        <i class="fas fa-language article-translate-status__icon"></i>
+                        <div class="article-translate-status__body">
+                            <div class="article-translate-status__title">Перевод</div>
+                            <div class="article-translate-status__text">—</div>
+                            <div class="article-translate-status__bar"><span></span></div>
+                        </div>
+                    </div>
+                </div>
+                <ul class="nav nav-tabs mb-2" role="tablist">
                     @foreach($languages as $i => $language)
                         <li class="nav-item">
                             <a class="nav-link {{ $i === 0 ? 'active' : '' }}" data-toggle="tab" href="#alang{{ $language->id }}">{{ $language->name }}</a>
                         </li>
                     @endforeach
                 </ul>
-                <div class="tab-content border p-3">
+                <div class="tab-content border">
                     @foreach($languages as $i => $language)
                         @php
                             $c = $language->code;
@@ -52,8 +71,11 @@
                                 <input type="text" name="meta_h1_{{ $c }}" class="form-control" value="{{ old('meta_h1_'.$c, $desc->meta_h1 ?? '') }}">
                             </div>
                             <div class="form-group">
-                                <label>Текст статьи</label>
-                                <textarea name="description_{{ $c }}" class="form-control" rows="10">{{ old('description_'.$c, $desc->description ?? '') }}</textarea>
+                                <label>Описание</label>
+                                <textarea name="description_{{ $c }}" id="description_{{ $c }}"
+                                          class="form-control js-wysiwyg" rows="12"
+                                          data-wysiwyg-height="1280"
+                                          placeholder="Текст статьи…">{{ old('description_'.$c, $desc->description ?? '') }}</textarea>
                             </div>
                             <div class="form-group">
                                 <label>Теги</label>

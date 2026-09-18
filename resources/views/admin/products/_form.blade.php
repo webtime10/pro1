@@ -32,14 +32,14 @@
             <div class="tab-content">
                 {{-- General --}}
                 <div class="tab-pane fade show active" id="tab-general">
-                    <ul class="nav nav-tabs mb-3" role="tablist">
+                    <ul class="nav nav-tabs mb-2" role="tablist">
                         @foreach($languages as $i => $language)
                             <li class="nav-item">
                                 <a class="nav-link {{ $i === 0 ? 'active' : '' }}" data-toggle="tab" href="#plang{{ $language->id }}">{{ $language->name }}</a>
                             </li>
                         @endforeach
                     </ul>
-                    <div class="tab-content border p-3">
+                    <div class="tab-content border">
                         @foreach($languages as $i => $language)
                             @php
                                 $c = $language->code;
@@ -275,7 +275,7 @@
                         $additionalImageRows = $additionalImageRows ?: [];
                     @endphp
                     <div class="table-responsive">
-                        <table class="table table-bordered table-hover mb-0" id="productAdditionalImages">
+                        <table class="table table-bordered mb-0" id="productAdditionalImages">
                             <thead>
                                 <tr>
                                     <th>Дополнительные изображения</th>

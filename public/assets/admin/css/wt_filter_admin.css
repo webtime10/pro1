@@ -30,10 +30,6 @@
   white-space: nowrap;
 }
 
-.wt-filter-list > tbody > tr:hover {
-  background: #f8fafc;
-}
-
 .wt-col-type { width: 200px; min-width: 180px; }
 .wt-col-sort { width: 96px; }
 .wt-col-expanded { width: 56px; text-align: center; }

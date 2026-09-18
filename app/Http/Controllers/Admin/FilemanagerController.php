@@ -89,6 +89,28 @@ class FilemanagerController extends Controller
         }
     }
 
+    /**
+     * One-file upload for Summernote / WYSIWYG (returns public URL).
+     */
+    public function editorUpload(Request $request): JsonResponse
+    {
+        try {
+            $file = $request->file('file');
+            if (! $file) {
+                throw new RuntimeException('Файл не передан');
+            }
+
+            $path = $this->images->uploadOne('blog', $file);
+
+            return response()->json([
+                'url' => $this->images->publicUrl($path),
+                'path' => $path,
+            ]);
+        } catch (Throwable $e) {
+            return response()->json(['error' => $e->getMessage()], 422);
+        }
+    }
+
     public function folder(Request $request): JsonResponse
     {
         try {

@@ -42,7 +42,10 @@
                 </div>
                 <div class="form-group">
                     <label>Описание</label>
-                    <textarea name="description_{{ $c }}" class="form-control" rows="4">{{ $cVal('description', $language) }}</textarea>
+                    <textarea name="description_{{ $c }}" id="blog_category_description_{{ $c }}"
+                              class="form-control js-wysiwyg" rows="8"
+                              data-wysiwyg-height="480"
+                              placeholder="Описание категории…">{{ $cVal('description', $language) }}</textarea>
                 </div>
                 <div class="form-group">
                     <label>Meta title</label>

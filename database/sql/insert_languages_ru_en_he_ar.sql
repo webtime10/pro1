@@ -1,13 +1,13 @@
--- Четыре языка: русский (по умолчанию), английский, иврит, арабский.
+-- Языки: русский (по умолчанию), английский, иврит, арабский, украинский.
 -- Выполняйте в phpMyAdmin (кодировка соединения: utf8mb4).
 --
 -- Внимание: если у языка с кодом `ua` уже есть описания категорий/товаров,
 -- строка DELETE ниже удалит и эти описания (CASCADE). В таком случае
--- закомментируйте DELETE или перенесите данные вручную.
+-- закомментируйте DELETE или перенесите данные вручную (код теперь `uk`).
 
 SET NAMES utf8mb4;
 
--- Убрать старый украинский из сидера (если был), если он не нужен:
+-- Старый код ua → uk (ISO 639-1):
 DELETE FROM `languages` WHERE `code` = 'ua';
 
 -- Сбросить «по умолчанию» у всех, затем выставить одному (ниже):
@@ -76,6 +76,22 @@ WHERE `code` = 'ar';
 INSERT INTO `languages` (`name`, `code`, `locale`, `directory`, `image`, `sort_order`, `status`, `is_default`, `is_active`, `created_at`, `updated_at`)
 SELECT 'العربية', 'ar', 'ar-SA', 'ar-sa', NULL, 4, 1, 0, 1, NOW(), NOW()
 WHERE NOT EXISTS (SELECT 1 FROM `languages` WHERE `code` = 'ar' LIMIT 1);
+
+-- Ukrainian (Українська)
+UPDATE `languages` SET
+  `name` = 'Українська',
+  `locale` = 'uk-UA',
+  `directory` = 'uk-ua',
+  `sort_order` = 5,
+  `status` = 1,
+  `is_default` = 0,
+  `is_active` = 1,
+  `updated_at` = NOW()
+WHERE `code` = 'uk';
+
+INSERT INTO `languages` (`name`, `code`, `locale`, `directory`, `image`, `sort_order`, `status`, `is_default`, `is_active`, `created_at`, `updated_at`)
+SELECT 'Українська', 'uk', 'uk-UA', 'uk-ua', NULL, 5, 1, 0, 1, NOW(), NOW()
+WHERE NOT EXISTS (SELECT 1 FROM `languages` WHERE `code` = 'uk' LIMIT 1);
 
 -- Ровно один язык по умолчанию — русский:
 UPDATE `languages` SET `is_default` = 0;

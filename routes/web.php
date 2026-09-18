@@ -114,6 +114,7 @@ Route::prefix('admin')
 
         Route::get('articles/suggest', [ArticleController::class, 'suggest'])->name('articles.suggest');
         Route::get('articles/suggest-products', [ArticleController::class, 'suggestProducts'])->name('articles.suggest-products');
+        Route::post('articles/translate', [ArticleController::class, 'translate'])->name('articles.translate');
         Route::resource('articles', ArticleController::class)->except(['show']);
         Route::resource('blog-categories', BlogCategoryController::class)->except(['show']);
         Route::resource('article-reviews', ArticleReviewController::class)->except(['show', 'create', 'store']);
@@ -124,6 +125,8 @@ Route::prefix('admin')
             ->name('filemanager.index');
         Route::post('filemanager/upload', [\App\Http\Controllers\Admin\FilemanagerController::class, 'upload'])
             ->name('filemanager.upload');
+        Route::post('filemanager/editor-upload', [\App\Http\Controllers\Admin\FilemanagerController::class, 'editorUpload'])
+            ->name('filemanager.editor-upload');
         Route::post('filemanager/folder', [\App\Http\Controllers\Admin\FilemanagerController::class, 'folder'])
             ->name('filemanager.folder');
         Route::post('filemanager/delete', [\App\Http\Controllers\Admin\FilemanagerController::class, 'delete'])

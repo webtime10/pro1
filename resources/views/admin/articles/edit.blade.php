@@ -9,10 +9,14 @@
     ],
 ])
 <section class="content pt-0">
+@php
+    $translateBtn = '<button type="button" class="oc-btn oc-btn-primary js-article-translate" title="Перевод RU → EN, UK"><i class="fas fa-language"></i></button>';
+@endphp
     @include('admin.partials.oc-form-toolbar', [
         'formId' => 'articleForm',
         'backUrl' => route('admin.articles.index'),
         'destroyUrl' => route('admin.articles.destroy', $article->id),
+        'extraButtons' => $translateBtn,
     ])
     <div class="container-fluid">
         <div class="oc-panel oc-form-panel">

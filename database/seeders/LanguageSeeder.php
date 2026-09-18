@@ -50,6 +50,16 @@ class LanguageSeeder extends Seeder
                 'is_default' => false,
                 'is_active' => true,
             ],
+            [
+                'code' => 'uk',
+                'name' => 'Українська',
+                'locale' => 'uk-UA',
+                'directory' => 'uk-ua',
+                'sort_order' => 5,
+                'status' => true,
+                'is_default' => false,
+                'is_active' => true,
+            ],
         ];
 
         foreach ($languages as $lang) {
@@ -59,7 +69,7 @@ class LanguageSeeder extends Seeder
             );
         }
 
-        // Убрать старый украинский из прежних версий сидера, если был.
+        // Старый код ua → uk (ISO 639-1)
         Language::query()->where('code', 'ua')->delete();
     }
 }

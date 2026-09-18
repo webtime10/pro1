@@ -10,9 +10,12 @@ use App\Models\ArticleImage;
 use App\Models\BlogCategory;
 use App\Models\Language;
 use App\Models\ProductDescription;
+use App\Services\AiTextCleaner;
+use App\Services\ArticleTranslateService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Throwable;
 
 class ArticleController extends Controller
 {
@@ -107,6 +110,102 @@ class ArticleController extends Controller
         return response()->json(['items' => $items]);
     }
 
+    public function translate(Request $request, ArticleTranslateService $translator): JsonResponse
+    {
+        $default = Language::getDefault();
+        $sourceCode = strtolower((string) $request->input('source_code', $default?->code ?? 'ru'));
+
+        $fields = [
+            'name' => (string) $request->input('name', ''),
+            'description' => (string) $request->input('description', ''),
+            'meta_h1' => (string) $request->input('meta_h1', ''),
+            'meta_title' => (string) $request->input('meta_title', ''),
+            'meta_description' => (string) $request->input('meta_description', ''),
+            'meta_keyword' => (string) $request->input('meta_keyword', ''),
+            'tag' => (string) $request->input('tag', ''),
+        ];
+
+        try {
+            $result = $translator->translate($fields, $sourceCode);
+        } catch (Throwable $e) {
+            return response()->json([
+                'ok' => false,
+                'message' => $e->getMessage(),
+            ], 422);
+        }
+
+        $saved = false;
+        $articleId = (int) $request->input('article_id', 0);
+        if ($articleId > 0) {
+            $article = Article::query()->find($articleId);
+            $languages = Language::forAdminForms()->keyBy(fn (Language $l) => strtolower((string) $l->code));
+
+            if ($article && $languages->isNotEmpty()) {
+                DB::transaction(function () use ($article, $languages, $result, $sourceCode, &$saved) {
+                    $sourceLang = $languages->get($sourceCode);
+                    if ($sourceLang) {
+                        $existingSource = ArticleDescription::query()
+                            ->where('article_id', $article->id)
+                            ->where('language_id', $sourceLang->id)
+                            ->first();
+
+                        ArticleDescription::updateOrCreate(
+                            [
+                                'article_id' => $article->id,
+                                'language_id' => $sourceLang->id,
+                            ],
+                            [
+                                'name' => $result['source']['name'] ?? '',
+                                'slug' => $existingSource?->slug
+                                    ?: (\Illuminate\Support\Str::slug((string) ($result['source']['name'] ?? 'article')) ?: 'article'),
+                                'description' => $result['source']['description'] ?? '',
+                                'meta_title' => $result['source']['meta_title'] ?? ($existingSource->meta_title ?? ''),
+                                'meta_h1' => $result['source']['meta_h1'] ?? ($existingSource->meta_h1 ?? ''),
+                                'meta_description' => $result['source']['meta_description'] ?? ($existingSource->meta_description ?? ''),
+                                'meta_keyword' => $result['source']['meta_keyword'] ?? ($existingSource->meta_keyword ?? ''),
+                                'tag' => $result['source']['tag'] ?? ($existingSource->tag ?? ''),
+                            ]
+                        );
+                    }
+
+                    foreach ($result['translations'] as $code => $row) {
+                        $lang = $languages->get(strtolower((string) $code));
+                        if (! $lang) {
+                            continue;
+                        }
+                        ArticleDescription::updateOrCreate(
+                            [
+                                'article_id' => $article->id,
+                                'language_id' => $lang->id,
+                            ],
+                            [
+                                'name' => $row['name'] ?? '',
+                                'slug' => $row['slug'] ?? (\Illuminate\Support\Str::slug((string) ($row['name'] ?? 'article')) ?: 'article'),
+                                'description' => $row['description'] ?? '',
+                                'meta_title' => $row['meta_title'] ?? '',
+                                'meta_h1' => $row['meta_h1'] ?? '',
+                                'meta_description' => $row['meta_description'] ?? '',
+                                'meta_keyword' => $row['meta_keyword'] ?? '',
+                                'tag' => $row['tag'] ?? '',
+                            ]
+                        );
+                    }
+
+                    $saved = true;
+                });
+            }
+        }
+
+        return response()->json([
+            'ok' => true,
+            'saved' => $saved,
+            'article_id' => $articleId ?: null,
+            'source_code' => $result['source_code'],
+            'source' => $result['source'],
+            'translations' => $result['translations'],
+        ]);
+    }
+
     private function form(?Article $article)
     {
         $pageTitle = $article ? 'Блог — статья' : 'Блог — новая статья';
@@ -168,6 +267,8 @@ class ArticleController extends Controller
                 $article = Article::create($payload);
             }
 
+            $cleaner = app(AiTextCleaner::class);
+
             foreach ($languages as $language) {
                 $suffix = $language->code;
                 ArticleDescription::updateOrCreate(
@@ -176,14 +277,14 @@ class ArticleController extends Controller
                         'language_id' => $language->id,
                     ],
                     [
-                        'name' => trim((string) $request->input('name_'.$suffix, '')),
+                        'name' => $cleaner->cleanPlain((string) $request->input('name_'.$suffix, '')),
                         'slug' => (string) $request->input('slug_'.$suffix),
-                        'description' => $request->input('description_'.$suffix),
-                        'meta_title' => $request->input('meta_title_'.$suffix),
-                        'meta_h1' => $request->input('meta_h1_'.$suffix),
-                        'meta_description' => $request->input('meta_description_'.$suffix),
-                        'meta_keyword' => $request->input('meta_keyword_'.$suffix),
-                        'tag' => $request->input('tag_'.$suffix),
+                        'description' => $cleaner->clean((string) $request->input('description_'.$suffix, '')),
+                        'meta_title' => $cleaner->cleanPlain((string) $request->input('meta_title_'.$suffix, '')),
+                        'meta_h1' => $cleaner->cleanPlain((string) $request->input('meta_h1_'.$suffix, '')),
+                        'meta_description' => $cleaner->cleanPlain((string) $request->input('meta_description_'.$suffix, '')),
+                        'meta_keyword' => $cleaner->cleanPlain((string) $request->input('meta_keyword_'.$suffix, '')),
+                        'tag' => $cleaner->cleanPlain((string) $request->input('tag_'.$suffix, '')),
                     ]
                 );
             }

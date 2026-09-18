@@ -186,6 +186,61 @@ class ImageManagerService
         }
     }
 
+    /**
+     * Upload one image for WYSIWYG editor. Returns relative path from disk root (catalog/...).
+     */
+    public function uploadOne(string $directory, UploadedFile $file): string
+    {
+        $directory = $this->sanitizeDirectory($directory);
+
+        try {
+            $absolute = $this->absoluteDirectory($directory);
+        } catch (Throwable) {
+            $catalog = $this->catalogRoot();
+            $absolute = $directory === ''
+                ? $catalog
+                : $catalog.DIRECTORY_SEPARATOR.str_replace('/', DIRECTORY_SEPARATOR, $directory);
+
+            if (! is_dir($absolute) && ! mkdir($absolute, 0775, true) && ! is_dir($absolute)) {
+                throw new RuntimeException('Cannot create upload directory');
+            }
+
+            $absolute = $this->assertInside($absolute, $this->realCatalogRoot());
+        }
+
+        if (! $file->isValid()) {
+            throw new RuntimeException('Ошибка загрузки файла');
+        }
+
+        $filename = $this->sanitizeUploadName($file->getClientOriginalName());
+        $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+
+        if (! in_array($ext, self::EXTENSIONS, true)) {
+            throw new RuntimeException('Недопустимый тип файла');
+        }
+
+        $mime = (string) $file->getMimeType();
+        $allowedMime = [
+            'image/jpeg', 'image/pjpeg', 'image/png', 'image/x-png',
+            'image/gif', 'image/webp',
+        ];
+        if (! in_array($mime, $allowedMime, true)) {
+            throw new RuntimeException('Недопустимый тип файла');
+        }
+
+        $base = pathinfo($filename, PATHINFO_FILENAME);
+        $candidate = $filename;
+        $i = 1;
+        while (is_file($absolute.DIRECTORY_SEPARATOR.$candidate)) {
+            $candidate = $base.'-'.$i.'.'.$ext;
+            $i++;
+        }
+
+        $file->move($absolute, $candidate);
+
+        return $this->relativeFromDisk($absolute.DIRECTORY_SEPARATOR.$candidate);
+    }
+
     public function createFolder(string $directory, string $folder): void
     {
         $absolute = $this->absoluteDirectory($directory);

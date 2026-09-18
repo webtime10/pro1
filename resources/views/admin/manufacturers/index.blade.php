@@ -11,7 +11,7 @@
         <div class="oc-panel">
             <div class="oc-panel-heading"><i class="fas fa-list"></i> Список производителей</div>
             <div class="oc-panel-body table-responsive">
-                <table class="table oc-table table-hover mb-0">
+                <table class="table oc-table mb-0">
                     <thead>
                         <tr>
                             <th>Название</th>
